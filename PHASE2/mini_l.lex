@@ -72,14 +72,14 @@ return {currPos += yyleng; return RETURN; }
 
 
 {COMMENT} {currLine++;currPos = 1;}
-{DIGIT}+ {currPos += yyleng; yylval.numVal = atoi(yytext); return NUMBER; }
-{IDENTIFIER} {currPos += yyleng; yylval.identVal = yytext; return IDENTIFIER; }
+{DIGIT}+ { yylval.numVal = atoi(yytext); return NUMBER; currPos+= yyleng;}
+{IDENTIFIER} {yylval.identVal = yytext; return IDENTIFIER; currPos+= yyleng;}
 {IDWS} {printf("Error at line %d, column %d: identifier \"%s\" must begin with a letter", currLine, currPos, yytext);exit(0);}
 {IDWE} {printf("Error at line %d, column %d: identifier \"%s\" cannot end with an underscore", currLine, currPos, yytext);exit(0);}
 [ ] {currPos += yyleng; }
 [\t] {currPos += yyleng; }
 "\n" {currLine++; currPos = 1;}
-. {printf("Error at line %d, column %d: unrecognized symbol \"s\"\n", currLine, currPos, yytext);exit(0);}
+. {printf("Error at line %d, column %d: unrecognized symbol \"%s\"\n", currLine, currPos, yytext);exit(0);}
 
 
 

@@ -1077,12 +1077,12 @@ YY_RULE_SETUP
 case 48:
 YY_RULE_SETUP
 #line 75 "mini_l.lex"
-{currPos += yyleng; yylval.numVal = atoi(yytext); return NUMBER; }
+{ /*yylval.numVal = atoi(yytext);*/ return NUMBER; currPos+= yyleng;}
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
 #line 76 "mini_l.lex"
-{currPos += yyleng; yylval.identVal = yytext; return IDENTIFIER; }
+{yylval.identVal = yytext; return IDENTIFIER; currPos+= yyleng;}
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
@@ -1113,7 +1113,7 @@ YY_RULE_SETUP
 case 55:
 YY_RULE_SETUP
 #line 82 "mini_l.lex"
-{printf("Error at line %d, column %d: unrecognized symbol \"s\"\n", currLine, currPos, yytext);exit(0);}
+{printf("Error at line %d, column %d: unrecognized symbol \"%s\"\n", currLine, currPos, yytext);exit(0);}
 	YY_BREAK
 case 56:
 YY_RULE_SETUP

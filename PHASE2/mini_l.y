@@ -6,7 +6,7 @@
 	extern int currLine;
 	void yyerror(const char *sym) {
 	        extern char* yytext;
-	        printf("Error %s at %d, column %d: \"%s\" expected",sym, currLine, currPos, yytext);
+	        printf("%s at %d, \"%s\" expected",sym, currLine, yytext);
 	}
 
 	
@@ -42,7 +42,7 @@ Functions:	Function Functions { printf("Function -> Function Functions\n"); }
 
 
 Function:	FUNCTION IDENTIFIER SEMICOLON BEGIN_PARAMS Declarations END_PARAMS BEGIN_LOCALS Declarations END_LOCALS BEGIN_BODY Statements END_BODY 
-		{ printf("FUNCTION IDENTIFIER SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LOCALS declarations END_LOCALS BEGIN_BODY Statements END_BODY\n"); }
+		{ printf("Function -> FUNCTION IDENTIFIER SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LOCALS declarations END_LOCALS BEGIN_BODY Statements END_BODY\n"); }
 ;
 
 Declaration:	Identifiers COLON INTEGER
@@ -57,8 +57,7 @@ Declarations:	Declaration SEMICOLON Declarations
 ;
 
 Identifiers:	IDENTIFIER { printf("Identifiers -> IDENTIFIER %s \n", $1); }
-		| IDENTIFIER COMMA Identifiers
-		{ printf("Identifiers -> IDENTIFIER COMMA Identifiers\n"); }
+		| IDENTIFIER COMMA Identifiers { printf("Identifiers -> IDENTIFIER COMMA Identifiers\n"); }
 ;
 
 Statements:	Statement SEMICOLON Statements
@@ -94,10 +93,11 @@ reads:			READ Var VLoop { printf("reads -> READ Var VLoop\n"); }
 ;
 
 writes:			WRITE Var VLoop { printf("writes -> WRITE Var VLoop\n"); }
+			/*| WRITE Var { printf("writes -> WRITE Var\n"); }*/
 ;
 
 VLoop:			COMMA Var VLoop { printf("VLoop -> COMMA Var VLoop\n"); }
-			| { printf("(epsilon)"); }
+			| { printf("VLoop -> (epsilon)\n"); }
 ;
 
 
@@ -132,15 +132,15 @@ comp:			EQ {printf("comp -> EQ\n");}
 			| GTE { printf("comp -> GTE\n"); }
 ;
 
-expression:		Mult_Expression { printf("expression -> Mult_Expression"); }
-			| Mult_Expression ADD expression {printf("expression -> Mult_Expression ADD expression"); }
-			| Mult_Expression SUB expression { printf("expression -> Mult_Expression SUB expression"); }
+expression:		Mult_Expression { printf("expression -> Mult_Expression\n"); }
+			| Mult_Expression ADD expression {printf("expression -> Mult_Expression ADD expression\n"); }
+			| Mult_Expression SUB expression { printf("expression -> Mult_Expression SUB expression\n"); }
 ;
 
 Mult_Expression:	Term {printf("Mult_Expression -> Term\n"); }
-			| Term MULT Mult_Expression { printf("Mult_Expression -> Term MULT Mult_Expression"); }
-			| Term DIV Mult_Expression { printf("Mult_Expression -> Term DIV Mult_Expression"); }
-			| Term MOD Mult_Expression { printf("Mult_Expression -> Term MOD Mult_Expression"); }
+			| Term MULT Mult_Expression { printf("Mult_Expression -> Term MULT Mult_Expression\n"); }
+			| Term DIV Mult_Expression { printf("Mult_Expression -> Term DIV Mult_Expression\n"); }
+			| Term MOD Mult_Expression { printf("Mult_Expression -> Term MOD Mult_Expression\n"); }
 ;
 
 Term:			Positive_Term { printf("Term -> Positive_Term\n"); }
