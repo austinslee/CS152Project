@@ -44,6 +44,7 @@ write		{ currPos += yyleng; return WRITE; }
 true		{ currPos += yyleng; return TRUE; }
 false		{ currPos += yyleng; return FALSE; }
 return		{ currPos += yyleng; return RETURN; }
+enum		{ currPos += yyleng; return ENUM; }
 
 
 
