@@ -87,10 +87,18 @@ or              { currPos += yyleng; return OR; }
 
 {COMMENT}   {/*ignore comment*/ currLine++; currPos = 1; }
 [ \t]+		{/*ignore whitespace*/ currPos += yyleng;}
-"\n"		{currLine++; currPos = 1;}
+"\n"		{currLine++; currPos = 0;}
 .		{printf("Error at ... line %d, column %d: unrecognized symbol %d \"%s\"\n", currLine, currPos, atoi(yytext), yytext); exit(0);}
 
 %%
+
+int yyparse();
+int yylex();
+
+int main(int argc, char** argv) {
+	yyparse();
+	return 0;
+}
 
 /*int main(int argc, char ** argv) {
     // The input text can be optionally read from an input file

@@ -1,7 +1,7 @@
-parser: mini_l.lex mini_l.y
-	bison -v -d --file-prefix=y mini_l.y
+mini_l: mini_l.lex mini_l.y
+	bison -d -v mini_l.y
 	flex mini_l.lex
-	gcc -o parser y.tab.c lex.yy.c -lfl
+	g++ -g -wall -ansi -pedantic --std=c++11 lex.yy.c mini_l.tab.c -lfl -o mini_l
 
-clean:
-	rm -f lex.yy.c y.tab.* y.output *.o parser
+
+clean: rm -f mini_l mini_l.t.* mini_l.output *~ lex.yy.c lex.yy.cc
