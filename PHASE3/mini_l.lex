@@ -7,6 +7,7 @@
 
 %{
 #include "mini_l.tab.h"
+FILE *output;
 int currLine = 1, currPos = 1;
 %}
 
@@ -96,6 +97,7 @@ int yyparse();
 int yylex();
 
 int main(int argc, char** argv) {
+
 	yyparse();
 	return 0;
 }
