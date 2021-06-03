@@ -1,0 +1,27 @@
+Identifier n is previously declared.
+Identifier z is not declared.
+Did not provide index for array Identifier r.
+ERROR: Continue outside loop in function main
+func main
+. n
+.[] r, 10
+.[] n, 10
+.< n
+. __temp__0
+= __temp__0, z
+. __temp__1
+= __temp__1, 1
+. __temp__2
++ __temp__2, __temp__0, __temp__1
+= n, __temp__2
+. __temp__3
+= __temp__3, n
+. __temp__4
+= __temp__4, r
+. __temp__5
++ __temp__5, __temp__3, __temp__4
+= n, __temp__5
+.> n
+continue
+endfunc
+

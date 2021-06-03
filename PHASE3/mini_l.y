@@ -80,7 +80,7 @@ Program:         %empty
 {
 	if(!mainFunc) {
 		printf("No main function declared\n");
-		exit(1);
+	
 	}
 }
 | Function Program
@@ -1024,11 +1024,11 @@ void yyerror(const char* s) {
 	extern char *yytext;
 	
 	printf("%s on line %d at char %d at symbol \"%s\"\n", s, yylineno, currPos, yytext);
-	exit(1);
+	
 }
 
 std::string new_temp() {
-	std::string t = "t" + std::to_string(tempCount);
+	std::string t = "__temp__" + std::to_string(tempCount);
 	tempCount++;
 	return t;
 }

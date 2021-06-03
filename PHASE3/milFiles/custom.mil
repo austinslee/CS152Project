@@ -1,0 +1,106 @@
+Array size can't be less than one
+Provided index for non-array Identifier n.
+ERROR: Continue outside loop in function potato
+func potato
+. n
+. l
+. k
+.[] none, 0
+= n, $0
+= l, $1
+= k, $2
+=[] none, 0, $3
+. __temp__0
+= __temp__0, 10
+. __temp__1
+= __temp__1, 3
+. __temp__2
+= __temp__2, 3
+. __temp__3
+= __temp__3, 11
+. __temp__4
+= __temp__4, n
+. __temp__5
+* __temp__5, __temp__3, __temp__4
+. __temp__6
+* __temp__6, __temp__2, __temp__5
+. __temp__7
+* __temp__7, __temp__1, __temp__6
+. __temp__8
++ __temp__8, __temp__0, __temp__7
+= n, __temp__8
+continue
+. __temp__9
+= __temp__9, 1
+. __temp__10
+=[] __temp__10, n, __temp__9
+ret __temp__10
+endfunc
+
+Identifier n is previously declared.
+Did not provide index for array Identifier stuffs.
+func notmain
+. n
+. fib_n
+.[] stuffs, 20
+. __temp__11
+= __temp__11, 3
+. __temp__12
+= __temp__12, -5
+. __temp__13
+* __temp__13, __temp__11, __temp__12
+. __temp__14
+= __temp__14, -2
+. __temp__15
++ __temp__15, __temp__13, __temp__14
+= n, __temp__15
+.> n
+. __temp__16
+= __temp__16, -2
+. __temp__17
+= __temp__17, 3
+. __temp__18
+= __temp__18, -5
+. __temp__19
+* __temp__19, __temp__17, __temp__18
+. __temp__20
++ __temp__20, __temp__16, __temp__19
+= n, __temp__20
+.> n
+. __temp__21
+= __temp__21, 10
+. __temp__22
+= __temp__22, 3
+. __temp__23
+= __temp__23, 4
+. __temp__24
+* __temp__24, __temp__22, __temp__23
+. __temp__25
++ __temp__25, __temp__21, __temp__24
+= n, __temp__25
+.> n
+.> stuffs
+. __temp__26
+= __temp__26, n
+. __temp__27
+= __temp__27, 1
+. __temp__28
+<= __temp__28, __temp__26, __temp__27
+?:= L0, __temp__28
+. __temp__30
+= __temp__30, n
+param __temp__30
+. __temp__31
+call potato, __temp__31
+= fib_n, __temp__31
+:= L1
+: L0
+. __temp__29
+= __temp__29, 1
+= fib_n, __temp__29
+: L1
+.> n
+.> fib_n
+endfunc
+
+No main function declared

@@ -1,7 +1,7 @@
   
 CFLAGS = -g -Wall -ansi -pedantic
 
-all: mini_l test test1
+mll: mini_l test 
 
 mini_l: mini_l.lex mini_l.y
 	bison -d -v mini_l.y
@@ -13,8 +13,12 @@ mini_l: mini_l.lex mini_l.y
 test: 
 	cat ./minFiles/fibonnaci.min | phase3 > ./milFiles/fibonnaci.mil
 	cat ./minFiles/primes.min | phase3 > ./milFiles/primes.mil
-test1:
 	cat ./minFiles/mytest.min | phase3 > ./milFiles/mytest.mil
+	cat ./minFiles/errors.min | phase3 > ./milFiles/errors.mil
+	cat ./minFiles/custom.min | phase3 > ./milFiles/custom.mil
+	cat ./minFiles/testy.min | phase3 > ./milFiles/testy.mil
+
+
 	
 
 
