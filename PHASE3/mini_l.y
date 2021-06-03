@@ -13,15 +13,17 @@
 	int tempCount = 0;
 	int labelCount = 0;	
 
-	extern char* yytext
-	extern int currPos
+	extern char* yytext;
+	extern int currPos;
 
 	std::map<std::string, std::string> varTemp;
 	std::map<std::string, int> arrSize;
 
 	bool mainFunc = false;
+	
+	std::set<std::string> funcs;
 
-	std::set<std::string> reserved {"NUMBER", "IDENT", "RETURN", "FUNCTION". "SEMICOLON", "BEGIN_PARAMS", "BEGIN_LOCALS", "END_LOCALS", "BEGIN_BODY", "END_BODY", "BEGINLOOP", "ENDLOOP", "COLON", "INTEGER", "COMMA", "ARRAY", "L_SQUARE_BRACKET", "R_SQUARE_BRACKET", "L_PAREN", "R_PAREN", "IF", "ELSE", "THEN", "MOD", "AND", "OR", "NOT", "Function", "Declarations", "Declaration", "Vars", "Var", "Expressions", "Expression", "Idents", "Ident", "Bool_Expr", "Relation_And_Expr", "Relation_Expr_Inv", "Relation_Expr", "Comp", "Multiplicative_Expr", "Term", "Statements", "Statement"};
+	std::set<std::string> reserved {"NUMBER", "IDENT", "RETURN", "FUNCTION", "SEMICOLON", "BEGIN_PARAMS", "BEGIN_LOCALS", "END_LOCALS", "BEGIN_BODY", "END_BODY", "BEGINLOOP", "ENDLOOP", "COLON", "INTEGER", "COMMA", "ARRAY", "L_SQUARE_BRACKET", "R_SQUARE_BRACKET", "L_PAREN", "R_PAREN", "IF", "ELSE", "THEN", "MOD", "AND", "OR", "NOT", "Function", "Declarations", "Declaration", "Vars", "Var", "Expressions", "Expression", "Idents", "Ident", "Bool_Expr", "Relation_And_Expr", "Relation_Expr_2", "Relation_Expr", "Comp", "Multiplicative_Expr", "Term", "Statements", "Statement"};
 
 
 
@@ -55,12 +57,13 @@
 %token <numVal> NUMBER
 
 %type <expression> Function FuncIdent Declarations Declaration Vars Var Expressions Expression Idents Ident
-%type <expression> Bool-Expr Relation-And-Expr Relation-Expr-Inv Relation-Expr Comp Multiplicative-Expr Term
+%type <expression> Bool_Expr Relation_And_Expr Relation_Expr_2 Relation_Expr Comp Multiplicative_Expr Term
 %type <statement> Statements Statement
 
-%token RETURN FUNCTION SEMICOLON BEGIN_PARAMS END_PARAMS BEIGIN_LOCALS END_LOCCALS BEGIN_BODY END_BODY BEGIN_LOOP END_LOOP
+%token RETURN FUNCTION SEMICOLON BEGIN_PARAMS END_PARAMS BEGIN_LOCALS END_LOCALS BEGIN_BODY END_BODY BEGINLOOP ENDLOOP
 %token COLON INTEGER COMMA ARRAY L_SQUARE_BRACKET R_SQUARE_BRACKET L_PAREN R_PAREN
 %token IF ELSE THEN CONTINUE ENDIF OF READ WRITE DO WHILE FOR
+%token TRUE FALSE
 
 
 %left ASSIGN
@@ -76,7 +79,8 @@
 Program:         %empty
 {
 	if(!mainFunc) {
-		printf("No main function declared!\n");
+		printf("No main function declared\n");
+		exit(1);
 	}
 }
 | Function Program
@@ -97,8 +101,8 @@ Function:	FUNCTION FuncIdent SEMICOLON BEGIN_PARAMS Declarations END_PARAMS BEGI
 	while(decs.find(".") != std::string::npos) {
 		size_t pos = decs.find(".");
 		decs.replace(pos, 1, "=");
-		std::string part = ", $" + std::to_string(decNum) + "\n";
-		decNum++;
+		std::string part = ", $" + std::to_string(dec_num) + "\n";
+		dec_num++;
 		decs.replace(decs.find("\n", pos), 1, part);
 	}
 	temp.append(decs);
@@ -119,7 +123,13 @@ Declarations: Declaration SEMICOLON Declarations {
 	temp.append($3.code);
 	$$.code = strdup(temp.c_str());
 	$$.place = strdup("");
-};
+	}
+	| %empty
+	{
+		$$.place = strdup("");
+		$$.code = strdup("");
+	}
+;
 
 Declaration: Idents COLON INTEGER 
 	{
@@ -182,7 +192,7 @@ Declaration: Idents COLON INTEGER
 			temp.append(".[] ");
 			if (right == std::string::npos) {
 				std::string ident = parse.substr(left, right);
-				if (rserved.find(ident) != reserved.end()) {
+				if (reserved.find(ident) != reserved.end()) {
 					printf("Identifier %s's name is a reserved word.\n", ident.c_str());
 				}
         	                if (funcs.find(ident) != funcs.end() || varTemp.find(ident) != varTemp.end()) {
@@ -220,7 +230,7 @@ Declaration: Idents COLON INTEGER
 	/*Enum is extra credit maybe I implement*/
 ;
 
-FuncIdent: IDENT
+FuncIdent: IDENTIFIER
 	{
 		if (funcs.find($1) != funcs.end()) {
 			printf("function name %s already declared.\n", $1);
@@ -234,9 +244,9 @@ FuncIdent: IDENT
 ;
 		
 
-Ident: IDENT
+Ident: IDENTIFIER
 	{
-		$$.place = strdup($1.place);
+		$$.place = strdup($1);
 		$$.code = strdup("");
 	}
 ;		
@@ -292,7 +302,7 @@ Statement: Var ASSIGN Expression
 		temp += "\n";
 		$$.code = strdup(temp.c_str());
 	}
-	| IF Bool-Expr THEN Statements ENDIF
+	| IF Bool_Expr THEN Statements ENDIF
 	{
 		std::string ifS = new_label();
 		std::string after = new_label();
@@ -305,21 +315,21 @@ Statement: Var ASSIGN Expression
 		temp = temp + ": " + after + "\n";
 		$$.code = strdup(temp.c_str());
 	}
-	| IF Bool-Expr THEN Statements ELSE Statements ENDIF
+	| IF Bool_Expr THEN Statements ELSE Statements ENDIF
 	{
 		std::string ifS = new_label();
 		std::string after = new_label();
 		std::string temp;
 		temp.append($2.code);
                 temp = temp + "?:= " + ifS + ", " + $2.place + "\n";
-		temp.append($5.code);
+		temp.append($6.code);
                 temp = temp + ":= " + after + "\n";
                 temp = temp + ": " + ifS + "\n";
 		temp.append($4.code);
 		temp = temp + ": " + after + "\n";
 		$$.code = strdup(temp.c_str());
 	}
-	| WHILE Bool-Expr BEGINLOOP Statements ENDLOOP	
+	| WHILE Bool_Expr BEGINLOOP Statements ENDLOOP	
 	{
 		std::string temp;
 		std::string BW = new_label();
@@ -329,7 +339,7 @@ Statement: Var ASSIGN Expression
 
 		size_t con = statement.find("continue");
 		while(con != std::string::npos) {
-			statement.replace(con, 8, ":= " + begin);
+			statement.replace(con, 8, ":= " + BW);
 			con = statement.find("continue");
 		}
 		temp.append(": ");
@@ -357,7 +367,7 @@ Statement: Var ASSIGN Expression
 		
 		$$.code = strdup(temp.c_str());
 	}
-	| DO BEGINLOOP Statements ENDLOOP WHILE Bool-Expr
+	| DO BEGINLOOP Statements ENDLOOP WHILE Bool_Expr
 	{
 		std::string temp;
 		std::string BL = new_label();
@@ -384,7 +394,7 @@ Statement: Var ASSIGN Expression
   
 		$$.code = strdup(temp.c_str());
 	}
-	| FOR Var ASSIGN NUMBER SEMICOLON Bool-Expr Var ASSIGN Expression BEGINLOOP Statements ENDLOOP
+	| FOR Var ASSIGN NUMBER SEMICOLON Bool_Expr SEMICOLON Var ASSIGN Expression BEGINLOOP Statements ENDLOOP
 	{
 		std::string temp;
 		std::string count = new_temp();
@@ -396,7 +406,7 @@ Statement: Var ASSIGN Expression
 		size_t pos = statement.find("continue");
 		while (pos != std::string::npos) {
 			statement.replace(pos, 8, ":= " + increment);
-			pos = code.find("continue");
+			pos = statement.find("continue");
 		}
 		temp.append($2.code);
 		std::string middle = std::to_string($4);
@@ -484,74 +494,401 @@ Bool_Expr: Relation_And_Expr
 	}
 	| Relation_And_Expr OR Bool_Expr
 	{
-		std::string dest = new_temp()
+		std::string dest = new_temp();
+		std::string temp;
+		
+		temp.append($1.code);
+		temp.append($3.code);
+		temp.append(". ");
+		temp.append(dest);
+		temp.append("\n");
+		
+		temp.append("|| ");
+		temp.append(dest);
+		temp.append(", ");
+		temp.append($1.place);
+		temp.append(", ");
+		temp.append($3.place);
+		temp.append("\n");
+
+		$$.code = strdup(temp.c_str());
+		$$.place = strdup(dest.c_str());
+	}
+;
+
+Relation_And_Expr: Relation_Expr
+	{
+		$$.place = strdup($1.place);
+		$$.code = strdup($1.code);
+	}
+	| Relation_Expr AND Relation_And_Expr
+	{
+		std::string dest = new_temp();
+		std::string temp;
+		
+		temp.append($1.code);
+		temp.append($3.code);
+		temp.append(". ");
+		temp.append(dest);
+		temp.append("\n");
+	
+		temp.append("&& ");
+		temp.append(dest);
+		temp.append(", ");
+		temp.append($1.place);
+		temp.append(", ");
+		temp.append($3.place);
+		temp.append("\n");
+	
+		$$.code = strdup(temp.c_str());
+		$$.code = strdup(dest.c_str());
+	}
+;
+
+Relation_Expr: NOT Relation_Expr_2
+	{
+		std::string dest = new_temp();
+		std::string temp;
+		
+		temp.append($2.code);
+		temp.append(". ");
+		temp.append(dest);
+		temp.append("\n");
+
+		temp.append("! ");
+		temp.append(dest);
+		temp.append(", ");
+		temp.append($2.place);
+		temp.append("\n");
+
+		$$.code = strdup(temp.c_str());
+		$$.place = strdup(dest.c_str());
+	}
+	| Relation_Expr_2
+	{
+		$$.place = strdup($1.place);
+		$$.code = strdup($1.code);
+	}
+;
+
+Relation_Expr_2: Expression Comp Expression
+	{
+		std::string dest = new_temp();
+		std::string temp;
+		
+		temp.append($1.code);
+		temp.append($3.code);
+		temp.append(". ");
+		temp.append(dest);
+		temp.append("\n");
+		temp.append($2.place);
+		temp.append(dest);
+		temp.append(", ");
+		temp.append($1.place);
+		temp.append(", ");
+		temp.append($3.place);
+		temp.append("\n");
+		$$.code = strdup(temp.c_str());
+		$$.place = strdup(dest.c_str());
+	}
+	| TRUE
+	{
+		std::string temp = "1";
+		$$.place = strdup(temp.c_str());
+		$$.code = strdup("");
+	}
+	| FALSE
+	{
+		std::string temp = "0";
+		$$.place = strdup(temp.c_str());
+		$$.code = strdup("");
+	}
+	| L_PAREN Bool_Expr R_PAREN
+	{
+		$$.place = strdup($2.place);
+		$$.code = strdup($2.code);
+	}
+;
+
+Comp: EQ
+	{
+		std::string temp = "== ";
+		$$.place = strdup(temp.c_str());
+		$$.code = strdup("");
+	}
+	| NEQ
+	{
+		std::string temp = "!= ";
+		$$.place = strdup(temp.c_str());
+		$$.code = strdup("");
+	}
+	| LT
+	{
+                std::string temp = "< ";
+                $$.place = strdup(temp.c_str());
+                $$.code = strdup("");
+	}
+	| GT
+	{
+                std::string temp = "> ";
+                $$.place = strdup(temp.c_str());
+                $$.code = strdup("");
+	}
+	| LTE
+	{
+                std::string temp = "<= ";
+                $$.place = strdup(temp.c_str());
+                $$.code = strdup("");
+	}
+	| GTE
+	{
+                std::string temp = ">= ";
+                $$.place = strdup(temp.c_str());
+                $$.code = strdup("");
+	}
+;
+
+Expression: Multiplicative_Expr
+	{
+		$$.code = strdup($1.code);
+		$$.place = strdup($1.place);
+	}
+	| Multiplicative_Expr ADD Expression
+	{
+		std::string dest = new_temp();
+		std::string temp;
+		temp.append($1.code);
+		temp.append($3.code);
+		temp.append(". ");
+		temp.append(dest);
+		temp.append("\n");
+		temp.append("+ ");
+		temp.append(dest);
+		temp.append(", ");
+		temp.append($1.place);
+		temp.append(", ");
+		temp.append($3.place);
+		temp.append("\n");
+		
+		$$.code = strdup(temp.c_str());
+		$$.place = strdup(dest.c_str());
+	}
+	| Multiplicative_Expr SUB Expression
+	{
+		std::string temp;
+		std::string dest = new_temp();
+                temp.append($1.code);
+                temp.append($3.code);
+                temp.append(". ");
+                temp.append(dest);
+                temp.append("\n");
+                temp.append("- ");
+                temp.append(dest);
+                temp.append(", ");
+                temp.append($1.place);
+                temp.append(", ");
+                temp.append($3.place);
+                temp.append("\n");
+
+		$$.code = strdup(temp.c_str());
+		$$.place = strdup(dest.c_str());
+	}
+;
+
+Multiplicative_Expr: Term MULT Multiplicative_Expr
+	{
+		std::string temp;
+		std::string dest = new_temp();
+		temp.append($1.code);
+		temp.append($3.code);
+		temp.append(". ");
+		temp.append(dest);
+		temp.append("\n");
+		temp.append("* ");
+		temp.append(dest);
+		temp.append(", ");
+		temp.append($1.place);
+		temp.append(", ");
+		temp.append($3.place);
+		temp.append("\n");
+	
+		$$.code = strdup(temp.c_str());
+		$$.place = strdup(dest.c_str());
+	}
+	| Term DIV Multiplicative_Expr
+	{
+                std::string temp;
+                std::string dest = new_temp();
+                temp.append($1.code);
+                temp.append($3.code);
+                temp.append(". ");
+                temp.append(dest);
+                temp.append("\n");
+                temp.append("/ ");
+                temp.append(dest);
+                temp.append(", ");
+                temp.append($1.place);
+                temp.append(", ");
+                temp.append($3.place);
+                temp.append("\n");
+
+                $$.code = strdup(temp.c_str());
+                $$.place = strdup(dest.c_str());
+	}	
+	| Term MOD Multiplicative_Expr
+	{
+                std::string temp;
+                std::string dest = new_temp();
+                temp.append($1.code);
+                temp.append($3.code);
+                temp.append(". ");
+                temp.append(dest);
+                temp.append("\n");
+                temp.append("% ");
+                temp.append(dest);
+                temp.append(", ");
+                temp.append($1.place);
+                temp.append(", ");
+                temp.append($3.place);
+                temp.append("\n");
+
+                $$.code = strdup(temp.c_str());
+                $$.place = strdup(dest.c_str());
+	}
+	| Term
+	{
+		$$.code = strdup($1.code);
+		$$.place = strdup($1.place);
+	}
+;
+
+
+Expressions: Expression
+	{
+		std::string temp;
+		temp.append($1.code);
+		temp.append("param ");
+		temp.append($1.place);
+		temp.append("\n");
+		$$.code = strdup(temp.c_str());
+		$$.place = strdup("");
+	}
+	| Expression COMMA Expressions
+	{
+                std::string temp;
+                temp.append($1.code);
+                temp.append("param ");
+                temp.append($1.place);
+                temp.append("\n");
+		temp.append($3.code);
+                $$.code = strdup(temp.c_str());
+                $$.place = strdup("");
+	}
+;
+
+
 
 Term: Var
 	{
-		if ($$.array == true) {
-			std::string temp;
-			std::string intermediate = newTemp();
+		std::string dest = new_temp();
+		std::string temp;
+		if ($1.arr) {
 			temp.append($1.code);
 			temp.append(". ");
-			temp.append(intermediate);
+			temp.append(dest);
 			temp.append("\n");
 			temp.append("=[] ");
-			temp.append(intermediate);
+			temp.append(dest);
 			temp.append(", ");
 			temp.append($1.place);
 			temp.append("\n");
-		$$.code = strdup(temp.c_str());
-		$$.place = strdup(intermediate.c_str());
-		$$.array = false;
 		}
 		else {
-			$$.code = strdup($1.code);
-			$$.place = strdup($1.place);
+			temp.append(". ");
+			temp.append(dest);
+			temp.append("\n");
+			temp.append("= ");
+			temp.append(dest);
+			temp.append(", ");
+			temp.append($1.place);
+			temp.append("\n");
+			temp.append($1.code);
 		}
+		if (varTemp.find($1.place) != varTemp.end()) {
+			varTemp[$1.place] = dest;
+		}
+		$$.code = strdup(temp.c_str());
+		$$.place = strdup(dest.c_str());
 	}
 	| SUB Var
 	{
-		$$.place = strdup(newTemp().c_str());
 		std::string temp;
-		temp.append($2.code);
-		temp.append(". ");
-		temp.append($$.place);
-		temp.append("\n");
-		if ($2.array) {
+		std::string dest = new_temp();
+		if ($2.arr) {
+			temp.append($2.code);
+			temp.append(". ");
+			temp.append(dest);
+			temp.append("\n");
 			temp.append("=[] ");
-			temp.append($$.place);
+			temp.append(dest);
 			temp.append(", ");
 			temp.append($2.place);
 			temp.append("\n");
 		}
 		else {
+			temp.append(". ");
+			temp.append(dest);
+			temp.append("\n");
 			temp.append("= ");
-			temp.append($$.place);
+			temp.append(dest);
 			temp.append(", ");
 			temp.append($2.place);
 			temp.append("\n");
 		}
+	
+		if (varTemp.find($2.place) != varTemp.end()) {
+			varTemp[$2.place] = dest;
+		}
 		temp.append("* ");
-		temp.append($$.place);
+		temp.append(dest);
 		temp.append(", ");
-		temp.append($$.place);
+		temp.append(dest);
 		temp.append(", -1\n");
   
 		$$.code = strdup(temp.c_str());
-		$$.array = false;
+		$$.place = strdup(dest.c_str());
 	}
 	| NUMBER
 	{
-		$$.code = strdup(empty);
-		$$.place = strdup(std::to_string($1).c_str());
+		std::string temp;
+		std::string dest = new_temp();
+		temp.append(". ");
+		temp.append(dest);
+		temp.append("\n");
+		temp.append("= ");
+		temp.append(dest);
+		temp.append(", ");
+		temp.append(std::to_string($1));
+		temp.append("\n");
+
+		$$.code = strdup(temp.c_str());
+		$$.place = strdup(dest.c_str());
 	}
 	| SUB NUMBER
 	{	
+		std::string dest = new_temp();
 		std::string temp;
-		temp.append("-");
+		temp.append(". ");
+		temp.append(dest);
+		temp.append("\n");
+		temp.append("= ");
+		temp.append(dest);
+		temp.append(", -");
 		temp.append(std::to_string($2));
-		$$.code = strdup(empty);
-	$$.place = strdup(temp.c_str());
+		temp.append("\n");
+
+		$$.code = strdup(temp.c_str());
+		$$.place = strdup(dest.c_str());
 	}
 	| L_PAREN Expression R_PAREN
 	{
@@ -560,7 +897,6 @@ Term: Var
 	}
 	| SUB L_PAREN Expression R_PAREN
 	{
-		  $$.place = strdup($3.place);
 		  std::string temp;
 		  temp.append($3.code);
 		  temp.append("* ");
@@ -569,37 +905,71 @@ Term: Var
 		  temp.append($3.place);
 		  temp.append(", -1\n");
 		  $$.code = strdup(temp.c_str());
+		  $$.place = strdup($3.place);
 	}
 	| Ident L_PAREN Expressions R_PAREN
 	{
-		  if (functions.find(std::string($1.place)) == functions.end()) {
-			    char temp[128];
-			    snprintf(temp, 128, "Use of undeclared function %s", $1.place);
-			    yyerror(temp);
+		  if (funcs.find(std::string($1.place)) == funcs.end()) {
+			  printf("Using undeclared function %s", $1.place);
 		  }
-
-		  $$.place = strdup(newTemp().c_str());
-
 		  std::string temp;
+		  std::string dest = new_temp();
 		  temp.append($3.code);
 		  temp.append(". ");
-		  temp.append($$.place);
+		  temp.append(dest);
 		  temp.append("\n");
 		  temp.append("call ");
 		  temp.append($1.place);
 		  temp.append(", ");
-		  temp.append($$.place);
+		  temp.append(dest);
 		  temp.append("\n");
   
 		  $$.code = strdup(temp.c_str());
+		  $$.place = strdup(dest.c_str());
 	}
 ;
 
 
+
+Vars: Var COMMA Vars
+	{
+		std::string temp;
+		temp.append($1.code);
+		if ($1.arr) {
+			temp.append(".[]| ");
+		}
+		else {
+			temp.append(".| ");
+		}
+		temp.append($1.place);
+		temp.append("\n");
+		temp.append($3.code);
+		
+		$$.code = strdup(temp.c_str());
+		$$.place = strdup("");
+	}
+	| Var
+	{
+                std::string temp;
+                temp.append($1.code);
+                if ($1.arr) {
+                        temp.append(".[]| ");
+                }
+                else {
+                        temp.append(".| ");
+                }
+                temp.append($1.place);
+                temp.append("\n");
+
+                $$.code = strdup(temp.c_str());
+                $$.place = strdup("");
+	}
+;
+
 Var: Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET
 	{
 		std::string temp;
-		std::string id = $1.place
+		std::string id = $1.place;
 		if(funcs.find(id) == funcs.end() && varTemp.find(id) == varTemp.end()) {
 			printf("Identifier %s is not declared.\n", id.c_str());
 		}
@@ -651,9 +1021,9 @@ Var: Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET
 
 void yyerror(const char* s) {
 	extern int yylineno;
-	extern char **yytext;
+	extern char *yytext;
 	
-	prtinf("%s on line %d at char %d at symbol \"%s\"\n", $, yylineno, currPos, yytext);
+	printf("%s on line %d at char %d at symbol \"%s\"\n", s, yylineno, currPos, yytext);
 	exit(1);
 }
 
